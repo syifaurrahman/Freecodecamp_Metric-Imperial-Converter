@@ -1,40 +1,60 @@
 function ConvertHandler() {
-
+  
   this.getNum = function(input) {
-    // Find index where the unit starts (first letter)
-    let numStr = input.match(/^[^a-zA-Z]*/)[0];
+    if (typeof input !== 'string') return 'invalid number';
 
-    // Default to 1 if no number provided
-    if (!numStr) return 1;
+    const firstCharIndex = input.search(/[a-zA-Z]/);
+    let numStr;
+    if (firstCharIndex === -1) {
+      numStr = input.trim();
+    } else {
+      numStr = input.slice(0, firstCharIndex).trim();
+    }
 
-    // Check for double fraction (e.g. 3/2/3)
-    if ((numStr.match(/\//g) || []).length > 1) {
+    if (numStr === '') return 1;
+
+    const slashes = (numStr.match(/\//g) || []).length;
+    if (slashes > 1) {
       return 'invalid number';
     }
 
-    // Handle fraction (e.g. 1/2)
-    if (numStr.includes('/')) {
+    if (slashes === 1) {
       const parts = numStr.split('/');
-      return parseFloat(parts[0]) / parseFloat(parts[1]);
+      if (parts.length !== 2) return 'invalid number';
+      const num = parts[0].trim();
+      const den = parts[1].trim();
+      if (!num || !den) return 'invalid number';
+      if (isNaN(num) || isNaN(den)) return 'invalid number';
+      const n = parseFloat(num);
+      const d = parseFloat(den);
+      if (d === 0) return 'invalid number';
+      const result = n / d;
+      if (isNaN(result) || !isFinite(result)) return 'invalid number';
+      return result;
     }
 
-    return parseFloat(numStr);
+    if (isNaN(numStr)) return 'invalid number';
+    const result = parseFloat(numStr);
+    if (isNaN(result) || !isFinite(result)) return 'invalid number';
+    return result;
   };
-
+  
   this.getUnit = function(input) {
+    if (typeof input !== 'string') return 'invalid unit';
+
+    const firstCharIndex = input.search(/[a-zA-Z]/);
+    if (firstCharIndex === -1) return 'invalid unit';
+
+    const unitStr = input.slice(firstCharIndex).trim().toLowerCase();
     const validUnits = ['gal', 'l', 'mi', 'km', 'lbs', 'kg'];
-    // Extract unit part (all letters at end of string)
-    let unitStr = input.match(/[a-zA-Z]+$/);
-    if (!unitStr) return 'invalid unit';
 
-    let unit = unitStr[0].toLowerCase();
+    if (!validUnits.includes(unitStr)) {
+      return 'invalid unit';
+    }
 
-    if (!validUnits.includes(unit)) return 'invalid unit';
-
-    // Liters should be uppercase 'L'
-    return unit === 'l' ? 'L' : unit;
+    return unitStr === 'l' ? 'L' : unitStr;
   };
-
+  
   this.getReturnUnit = function(initUnit) {
     const unitMap = {
       'gal': 'L',
@@ -58,29 +78,43 @@ function ConvertHandler() {
     };
     return spellMap[unit];
   };
-
+  
   this.convert = function(initNum, initUnit) {
-    const galToL   = 3.78541;
-    const lbsToKg  = 0.453592;
-    const miToKm   = 1.60934;
+    const galToL = 3.78541;
+    const lbsToKg = 0.453592;
+    const miToKm = 1.60934;
     let result;
 
     switch (initUnit) {
-      case 'gal': result = initNum * galToL;        break;
-      case 'L':   result = initNum / galToL;        break;
-      case 'mi':  result = initNum * miToKm;        break;
-      case 'km':  result = initNum / miToKm;        break;
-      case 'lbs': result = initNum * lbsToKg;       break;
-      case 'kg':  result = initNum / lbsToKg;       break;
+      case 'gal':
+        result = initNum * galToL;
+        break;
+      case 'L':
+        result = initNum / galToL;
+        break;
+      case 'mi':
+        result = initNum * miToKm;
+        break;
+      case 'km':
+        result = initNum / miToKm;
+        break;
+      case 'lbs':
+        result = initNum * lbsToKg;
+        break;
+      case 'kg':
+        result = initNum / lbsToKg;
+        break;
+      default:
+        return 'invalid unit';
     }
 
     return parseFloat(result.toFixed(5));
   };
-
+  
   this.getString = function(initNum, initUnit, returnNum, returnUnit) {
     return `${initNum} ${this.spellOutUnit(initUnit)} converts to ${returnNum} ${this.spellOutUnit(returnUnit)}`;
   };
-
+  
 }
 
 module.exports = ConvertHandler;
