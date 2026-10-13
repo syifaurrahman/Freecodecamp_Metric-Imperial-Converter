@@ -1,7 +1,7 @@
 function ConvertHandler() {
   
   this.getNum = function(input) {
-    if (typeof input !== 'string') return 'invalid number';
+    if (typeof input !== 'string' || input.trim() === '') return 'invalid number';
 
     const firstCharIndex = input.search(/[a-zA-Z]/);
     let numStr;
